@@ -1,0 +1,19 @@
+# Author - Dinesh Pola - Sr Infrastructure Engineer
+# Created Date - 07AUG2018
+# This playbook creates group "oinstall" and user "oracle", adds oracle user to oinstall group
+# This is required to install any oracle products such as Weblogic, OHS etc.
+# Run as "ansible-playbook -i /root/hosts-weblogic account.yaml"
+---
+- hosts: weblogic
+  become: yes
+  tasks:
+    - name: ensure group "oinstall" exists
+      group:
+        name: oinstall
+        state: present
+
+    - name: ensure user "oracle" exists
+      user:
+        name: oracle
+        state: present
+        group: oinstall
