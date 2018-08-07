@@ -1,0 +1,61 @@
+# This Playbook will install OHS 12.2.1.3
+# Author - Dinesh Pola - Sr Infrastructure Engineer
+# Created Date - 25JUN2018
+# Need to have the binaries in /tmp/OHS12 folder on ansible control machine
+# Specify to login as oracle user to the server from the inventory file & update the group name in hosts file as "Weblogic"
+# Run as "ansible-playbook -i /root/hosts-OHS OHS12.yaml"
+---
+- hosts: weblogic
+  tasks:
+    - name: Install Pre-requisites
+      package: name={{item}} state=present
+      with_items:
+       - java
+       - binutils-*
+       - compat-libcap*
+       - compat-libstdc++-*
+       - libgcc-*
+       - libstdc++-*
+       - libstdc++-devel-*
+       - sysstat-*
+       - gcc-*
+       - gcc-c++-*
+       - ksh-*
+       - make-*
+       - glibc-*
+       - glibc-devel-*
+       - libaio-*
+       - libaio-devel-*
+      become: yes
+
+# Create Required Directories for installation
+    - name: Create Directory
+      file: path="{{item}}" owner=oracle group=oinstall state=directory mode=0755
+      with_items:
+       - /tmp/OHS12
+       - /opt/web
+       - /opt/app
+       - /opt/app/oracle
+       - /opt/app/oracle/oraInventory
+      become: yes
+
+# Unarchive module looks for a local file when src is specified
+    - name: Unzip OHS12
+      unarchive: src=/opt/Binaries/OHS12/fmw_12.2.1.3.0_ohs_linux64.zip dest=/tmp/OHS12 owner=oracle group=oinstall mode=0755
+
+# Copy OHS-12 Response file
+    - name: Copy OHS12 Response file
+      copy: src=/opt/Binaries/OHS12/ohs_12.2.1.3-responsefile dest=/tmp/OHS12/ohs_12.2.1.3-responsefile owner=oracle group=oinstall mode=0755
+
+# Copy OHS-12 Inventory Location file
+    - name: Copy OHS12 InventoryLocation file
+      copy: src=/opt/Binaries/OHS12/oraInst.loc dest=/tmp/OHS12/oraInst.loc owner=oracle group=oinstall mode=0755
+
+# Install OHS-12 using Response file - Silent Installation
+    - name: Install OHS12.2.1.3
+      shell: /tmp/OHS12/fmw_12.2.1.3.0_ohs_linux64.bin -silent -responseFile /tmp/OHS12/ohs_12.2.1.3-responsefile -invPtrLoc /tmp/OHS12/oraInst.loc > /opt/web/install.log
+      become_user: oracle
+
+# Deleting the unzipped files by the unarchive module
+    - name: Clean installation files
+      file: path=/tmp/OHS12 state=absent
