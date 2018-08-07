@@ -1,0 +1,58 @@
+# This Playbook will install Weblogic-12.1.2
+# Author - Dinesh Pola - Sr Infrastructure Engineer
+# Created Date - 27JUN2018
+# Need to have the binaries in /tmp/Weblogic folder on ansible control machine
+# Specify to login as oracle user to the server from the inventory file & update the group name in hosts file as "Weblogic"
+# Run as "ansible-playbook -i /root/hosts-weblogic Weblogic.yaml"
+---
+- hosts: weblogic
+  tasks:
+# Create Required Directories for installation
+    - name: Create Directory
+      file: path="{{item}}" owner=oracle group=oinstall state=directory mode=0755
+      with_items:
+       - /opt/jda-apps
+       - /opt/app
+       - /opt/app/oracle
+       - /opt/app/oracle/oraInventory
+      become: yes
+
+# Install jdk1.7
+    - name: Untar jdk1.7
+      unarchive: src=/opt/Binaries/Weblogic/jdk-7u80-linux-x64.tar dest=/opt/jda-apps owner=oracle group=oinstall mode=0755
+
+# Install jdk1.8
+    - name: Untar jdk1.8
+      unarchive: src=/opt/Binaries/Weblogic/jdk-8u161-linux-x64.tar dest=/opt/jda-apps owner=oracle group=oinstall mode=0755
+
+# Rename jdk1.7
+    - name: Rename jdk1.7
+      command: mv /opt/jda-apps/jdk1.7.0_80 /opt/jda-apps/jdk1.7.0
+      become_user: oracle
+
+# Rename jdk1.8
+    - name: Rename jdk1.8
+      command: mv /opt/jda-apps/jdk1.8.0_161 /opt/jda-apps/jdk1.8.0
+      become_user: oracle
+
+# Copy Root Inventory Location file
+    - name: Copy Weblogic InventoryLocation file
+      copy: src=/opt/Binaries/Weblogic/oraInst.loc dest=/etc/oraInst.loc mode=0755
+      become: yes
+
+# Copy Weblogic jar installer
+    - name: Copy Weblogic jar
+      copy: src=/opt/Binaries/Weblogic/wls_121200.jar dest=/opt/jda-apps owner=oracle group=oinstall mode=0755
+
+# Copy Weblogic-12 Response file
+    - name: Copy Weblogic Response file
+      copy: src=/opt/Binaries/Weblogic/weblogic-responsefile dest=/opt/jda-apps/weblogic-responsefile owner=oracle group=oinstall mode=0755
+
+# Copy Weblogic Inventory Location file
+    - name: Copy Weblogic InventoryLocation file
+      copy: src=/opt/Binaries/Weblogic/oraInst.loc dest=/opt/jda-apps/oraInst.loc owner=oracle group=oinstall mode=0755
+
+# Install Weblogic-12 using Response file - Silent Installation
+    - name: Install Weblogic-12
+      shell: /opt/jda-apps/jdk1.7.0/bin/java -jar /opt/jda-apps/wls_121200.jar -silent -responseFile /opt/jda-apps/weblogic-responsefile -invPtrLoc /opt/jda-apps/oraInst.loc > /opt/jda-apps/install.log
+      become_user: oracle
