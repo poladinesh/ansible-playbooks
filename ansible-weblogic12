@@ -3,7 +3,7 @@
 # Created Date - 27JUN2018
 # Need to have the binaries in /tmp/Weblogic folder on ansible control machine
 # Specify to login as oracle user to the server from the inventory file & update the group name in hosts file as "Weblogic"
-# Run as "ansible-playbook -i /root/hosts-weblogic Weblogic.yaml"
+# Run as "ansible-playbook -i /root/hosts-weblogic ansible-weblogic12.yaml"
 ---
 - hosts: weblogic
   tasks:
